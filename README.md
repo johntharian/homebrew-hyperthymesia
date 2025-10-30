@@ -5,7 +5,7 @@ Official Homebrew tap for Hyperthymesia - a local-first, privacy-focused AI sear
 ## Installation
 
 ```bash
-brew tap johntharian/hyperthymesia
+brew tap johntharian/homebrew-hyperthymesia
 brew install hyperthymesia
 ```
 
