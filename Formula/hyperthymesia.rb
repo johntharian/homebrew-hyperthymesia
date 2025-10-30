@@ -3,7 +3,7 @@ class Hyperthymesia < Formula
   homepage "https://github.com/johntharian/hyperthymesia"
   url "https://github.com/johntharian/hyperthymesia/archive/refs/heads/main.zip"
   version "1.0.0"
-  sha256 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"  # Update with actual SHA256
+  sha256 "6dffb3e72515d6d8eb9f730dab414398e8d916ef43539a57f173e98ed246f993"
 
   depends_on "ollama"
   depends_on "python@3.11"
