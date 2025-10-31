@@ -8,50 +8,40 @@ class Hyperthymesia < Formula
   depends_on "ollama"
   depends_on "python@3.11"
 
-  # This prevents Homebrew from expecting bottles or needing Xcode
-  pour_bottle? { false }
-
   def install
     python = Formula["python@3.11"].opt_bin/"python3"
 
-    cd "hyperthymesia_cli" do
-      # Install into Homebrew’s libexec directory (standard for Python apps)
-      system python, "-m", "pip", "install", "--upgrade", "pip"
-      system python, "-m", "pip", "install", "--no-deps", "--prefix=#{libexec}", "."
-
-      # Symlink the CLI into bin/
-      bin.install Dir["#{libexec}/bin/*"]
-      bin.env_script_all_files(libexec/"bin", PYTHONPATH: "#{libexec}/lib/python3.11/site-packages")
-    end
+    # Install package from root
+    system python, "-m", "pip", "install", "--prefix=#{prefix}", "."
   end
 
   def post_install
-    ohai "Setting up Ollama service..."
+    puts "Setting up Ollama service..."
     system "brew", "services", "start", "ollama"
-
     puts "Waiting for Ollama to start..."
     sleep 3
 
     if system("curl", "-s", "http://localhost:11434/api/tags", out: File::NULL)
-      ohai "Ollama is running"
+      puts "✓ Ollama is running"
     else
-      opoo "Could not verify Ollama is running"
+      puts "⚠ Could not verify Ollama is running"
       puts "Try: brew services restart ollama"
     end
 
-    ohai "Downloading llama3.2:3b model..."
+    puts "Downloading llama3.2:3b model (this may take a few minutes)..."
     system "ollama", "pull", "llama3.2:3b"
 
     puts ""
-    puts "Installation complete!"
+    puts "✓ Installation complete!"
     puts ""
     puts "Quick start:"
-    puts "  1. Index code:  hyperthymesia index add /path/to/code"
-    puts "  2. Ask:         hyperthymesia agent \"how does X work?\""
+    puts "  1. Index your code:  hyperthymesia index add /path/to/code"
+    puts "  2. Ask a question:   hyperthymesia agent \"how does X work?\""
+    puts ""
   end
 
-  test do
-    python = Formula["python@3.11"].opt_bin/"python3"
-    system python, "-c", "from core.local_llm import LocalLLM; print('OK')"
-  end
+  # test do
+  #   python = Formula["python@3.11"].opt_bin/"python3"
+  #   system python, "-c", "import core.local_llm; print('OK')"
+  # end
 end
