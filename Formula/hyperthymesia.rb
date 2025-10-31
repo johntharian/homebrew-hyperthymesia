@@ -8,49 +8,49 @@ class Hyperthymesia < Formula
   depends_on "ollama"
   depends_on "python@3.11"
 
+  # This prevents Homebrew from expecting bottles or needing Xcode
+  pour_bottle? { false }
+
   def install
-    # Create symbolic links for dependencies
     python = Formula["python@3.11"].opt_bin/"python3"
 
-    # Navigate to the CLI directory
-    cd "hyperthymesia_cli"
+    cd "hyperthymesia_cli" do
+      # Install into Homebrew’s libexec directory (standard for Python apps)
+      system python, "-m", "pip", "install", "--upgrade", "pip"
+      system python, "-m", "pip", "install", "--no-deps", "--prefix=#{libexec}", "."
 
-    # Install the package in development mode
-    system python, "-m", "pip", "install", "--prefix=#{prefix}", "."
+      # Symlink the CLI into bin/
+      bin.install Dir["#{libexec}/bin/*"]
+      bin.env_script_all_files(libexec/"bin", PYTHONPATH: "#{libexec}/lib/python3.11/site-packages")
+    end
   end
 
   def post_install
-    # Start Ollama service if not running
-    puts "Setting up Ollama service..."
+    ohai "Setting up Ollama service..."
     system "brew", "services", "start", "ollama"
 
-    # Wait for Ollama to be ready
     puts "Waiting for Ollama to start..."
     sleep 3
 
-    # Check if Ollama is running
     if system("curl", "-s", "http://localhost:11434/api/tags", out: File::NULL)
-      puts "✓ Ollama is running"
+      ohai "Ollama is running"
     else
-      puts "⚠ Could not verify Ollama is running"
+      opoo "Could not verify Ollama is running"
       puts "Try: brew services restart ollama"
     end
 
-    # Pull the default model
-    puts "Downloading llama3.2:3b model (this may take a few minutes)..."
+    ohai "Downloading llama3.2:3b model..."
     system "ollama", "pull", "llama3.2:3b"
 
     puts ""
-    puts "✓ Installation complete!"
+    puts "Installation complete!"
     puts ""
     puts "Quick start:"
-    puts "  1. Index your code:  hyperthymesia index add /path/to/code"
-    puts "  2. Ask a question:   hyperthymesia agent \"how does X work?\""
-    puts ""
+    puts "  1. Index code:  hyperthymesia index add /path/to/code"
+    puts "  2. Ask:         hyperthymesia agent \"how does X work?\""
   end
 
   test do
-    # Test that Python imports work
     python = Formula["python@3.11"].opt_bin/"python3"
     system python, "-c", "from core.local_llm import LocalLLM; print('OK')"
   end
